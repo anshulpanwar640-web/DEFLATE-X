@@ -444,7 +444,7 @@ void runServer(int port = 8080) {
         int bytes = 0;
         size_t header_end = string::npos;
 
-        // Read until header boundary
+       
         while ((bytes = recv(client_sock, buf, sizeof(buf), 0)) > 0) {
             raw_request.append(buf, bytes);
             header_end = raw_request.find("\r\n\r\n");
@@ -462,7 +462,7 @@ void runServer(int port = 8080) {
             body_part = raw_request.substr(header_end + 4);
         }
 
-        // Parse Request Method & Path
+        
         size_t line_end = header_part.find("\r\n");
         string req_line = (line_end != string::npos) ? header_part.substr(0, line_end) : header_part;
         string method = "", path = "";
@@ -473,7 +473,7 @@ void runServer(int port = 8080) {
             path = req_line.substr(p1 + 1, p2 - p1 - 1);
         }
 
-        // Parse Content-Length for POST body
+        
         size_t content_len = 0;
         size_t cl_pos = header_part.find("Content-Length: ");
         if (cl_pos == string::npos) cl_pos = header_part.find("content-length: ");
@@ -482,7 +482,7 @@ void runServer(int port = 8080) {
             content_len = stoul(header_part.substr(cl_pos + 16, cl_end - (cl_pos + 16)));
         }
 
-        // Read remaining body bytes
+        
         while (body_part.length() < content_len) {
             size_t needed = content_len - body_part.length();
             int n = recv(client_sock, buf, min((size_t)sizeof(buf), needed), 0);
@@ -490,7 +490,7 @@ void runServer(int port = 8080) {
             body_part.append(buf, n);
         }
 
-        // Handle CORS Pre-flight
+        
         if (method == "OPTIONS") {
             string resp = "HTTP/1.1 204 No Content\r\n"
                           "Access-Control-Allow-Origin: *\r\n"
@@ -499,7 +499,7 @@ void runServer(int port = 8080) {
                           "Connection: close\r\n\r\n";
             send(client_sock, resp.c_str(), (int)resp.length(), 0);
         }
-        // Handle Static HTML UI
+        
         else if (method == "GET" && (path == "/" || path == "/index.html")) {
             ifstream file("index.html", ios::binary);
             if (file) {
@@ -521,7 +521,7 @@ void runServer(int port = 8080) {
                 send(client_sock, err.c_str(), (int)err.length(), 0);
             }
         }
-        // Handle C++ Compression API
+        
         else if (method == "POST" && path == "/api/compress") {
             cout << "[C++ Backend] Received compress request: " << body_part.size() << " bytes" << endl;
 
@@ -529,7 +529,7 @@ void runServer(int port = 8080) {
             in_file.write(body_part.data(), body_part.size());
             in_file.close();
 
-            // Run full.cpp C++ compression engine
+            
             compress("__tmp_compress_in.bin", "__tmp_compress_out.dfx");
 
             ifstream out_file("__tmp_compress_out.dfx", ios::binary);
@@ -555,7 +555,7 @@ void runServer(int port = 8080) {
                           "Connection: close\r\n\r\n" + compressed;
             send(client_sock, resp.c_str(), (int)resp.length(), 0);
         }
-        // Handle C++ Decompression API
+       
         else if (method == "POST" && path == "/api/decompress") {
             cout << "[C++ Backend] Received decompress request: " << body_part.size() << " bytes" << endl;
 
@@ -563,7 +563,7 @@ void runServer(int port = 8080) {
             in_file.write(body_part.data(), body_part.size());
             in_file.close();
 
-            // Run full.cpp C++ decompression engine
+            
             decompress("__tmp_decompress_in.dfx", "__tmp_decompress_out.txt");
 
             ifstream out_file("__tmp_decompress_out.txt", ios::binary);
@@ -603,7 +603,7 @@ void runServer(int port = 8080) {
 }
 
 int main(int argc, char* argv[]) {
-    // If command-line flags are passed for batch processing:
+    
     if (argc >= 4 && string(argv[1]) == "-c") {
         compress(argv[2], argv[3]);
         return 0;
@@ -613,7 +613,7 @@ int main(int argc, char* argv[]) {
         return 0;
     }
 
-    // Default: Start backend server and automatically open browser UI
+    
     cout << "========================================================" << endl;
     cout << "   DEFLATE-X File Compressor (C++ Core Backend)         " << endl;
     cout << "========================================================" << endl;
@@ -628,7 +628,7 @@ int main(int argc, char* argv[]) {
     system("xdg-open http://localhost:8080 &");
 #endif
 
-    // Runs the server directly (no terminal typing required!)
+    
     runServer(8080);
     return 0;
 }
