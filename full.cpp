@@ -5,7 +5,7 @@
 #include <string>
 using namespace std;
 
-// ---------- Member 1: BitWriter and BitReader ----------
+
 
 class BitWriter {
 private:
@@ -97,9 +97,7 @@ public:
     }
 };
 
-// ---------- Member 2 and 3: Min-Heap and Huffman Tree ----------
 
-// 0 to 255 = normal characters, 256 and above = LZ77 match lengths
 const int TOTAL = 512;
 
 struct Node {
@@ -118,7 +116,7 @@ Node* makeNode(int symbol, int freq, Node* left, Node* right) {
     return n;
 }
 
-// smallest freq should come out first (min heap)
+
 struct Compare {
     bool operator()(Node* a, Node* b) {
         return a->freq > b->freq;
@@ -149,7 +147,7 @@ Node* buildTree(int freq[]) {
     return heap.top();
 }
 
-// left = 0, right = 1
+
 void makeCodes(Node* root, string code, string codes[]) {
     if (root == NULL) {
         return;
@@ -194,7 +192,7 @@ int readSymbol(BitReader* reader, Node* root) {
     return cur->symbol;
 }
 
-// ---------- Member 4: LZ77 ----------
+
 
 const int WINDOW = 4096;
 const int MIN_MATCH = 3;
@@ -239,7 +237,7 @@ int doLZ77(unsigned char* data, int size, int sym[], int dist[]) {
     return count;
 }
 
-// ---------- compress and decompress ----------
+
 
 int getSize(const char* name) {
     ifstream in(name, ios::binary);
@@ -263,12 +261,12 @@ void compress(const char* inName, const char* outName) {
     in.read((char*)data, size);
     in.close();
 
-    // step 1: LZ77
+    
     int* sym = new int[size + 1];
     int* dist = new int[size + 1];
     int tokens = doLZ77(data, size, sym, dist);
 
-    // step 2: count frequency
+    
     int freq[TOTAL];
     for (int i = 0; i < TOTAL; i++) {
         freq[i] = 0;
@@ -277,7 +275,7 @@ void compress(const char* inName, const char* outName) {
         freq[sym[i]]++;
     }
 
-    // step 3: Huffman tree and codes
+    
     Node* root = buildTree(freq);
     string codes[TOTAL];
     makeCodes(root, "", codes);
@@ -289,7 +287,7 @@ void compress(const char* inName, const char* outName) {
         }
     }
 
-    // step 4: write bits
+    
     BitWriter writer(outName);
     writer.writeBits(size, 32);
     writer.writeBits(distinct, 10);
