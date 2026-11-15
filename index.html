@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DEFLATE-X | Text Compression Engine</title>
-    <!-- Multi-Font Typography System -->
+   
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     
     <style>
-        /* ============================================================
-           COSMIC ARTISTRY DESIGN SYSTEM
-           Tones: Space Blue, Slate Gray, Gray-Washed White, Soft Gradients
-           ============================================================ */
+       
         :root {
             --cosmic-void: #080b14;
             --cosmic-space-blue: #111625;
@@ -62,7 +59,7 @@
             overflow-x: hidden;
         }
 
-        /* Starfield Canvas */
+        
         #starfieldCanvas {
             position: fixed;
             top: 0;
@@ -80,7 +77,7 @@
             z-index: 1;
         }
 
-        /* Vector Icons */
+        
         .icon {
             display: inline-block;
             width: 18px;
@@ -93,7 +90,7 @@
             vertical-align: middle;
         }
 
-        /* Header */
+        
         header {
             text-align: center;
             margin-bottom: 2.25rem;
@@ -160,7 +157,7 @@
             line-height: 1.55;
         }
 
-        /* Demo Presets */
+       
         .presets-row {
             display: flex;
             align-items: center;
@@ -198,7 +195,7 @@
             transform: translateY(-1px);
         }
 
-        /* Segmented Mode Selector */
+        
         .tab-bar {
             display: flex;
             background: var(--cosmic-space-blue);
@@ -236,7 +233,7 @@
             box-shadow: 0 4px 16px var(--cosmic-glow);
         }
 
-        /* Workspace Card */
+        
         .main-card {
             background: var(--cosmic-card);
             backdrop-filter: blur(24px);
@@ -258,7 +255,7 @@
             background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.6), transparent);
         }
 
-        /* Dropzone */
+        
         .dropzone {
             border: 2px dashed rgba(148, 163, 184, 0.2);
             border-radius: var(--radius-md);
@@ -335,7 +332,7 @@
             transform: translateY(-1px);
         }
 
-        /* File Ingress Card (Metadata only: Name & Size; Zero internal content exposed) */
+        
         .file-ingress-card {
             display: none;
             background: rgba(17, 22, 37, 0.95);
@@ -418,7 +415,7 @@
             border-radius: 6px;
         }
 
-        /* Error Notification */
+        
         .error-notification {
             display: none;
             background: rgba(244, 63, 94, 0.1);
@@ -433,7 +430,7 @@
             gap: 0.6rem;
         }
 
-        /* Primary Action Button */
+        
         .btn-action-primary {
             width: 100%;
             margin-top: 1.6rem;
@@ -468,9 +465,7 @@
             box-shadow: none;
         }
 
-        /* ============================================================
-           SCATTERING COMPRESSION PROGRESS STAGE
-           ============================================================ */
+        
         .compression-progress-stage {
             display: none;
             margin-top: 1.75rem;
@@ -515,7 +510,7 @@
             font-weight: 700;
         }
 
-        /* Letter Scattering Canvas & Track */
+        
         .scatter-track-wrapper {
             position: relative;
             width: 100%;
@@ -583,9 +578,7 @@
 
         .log-arrow { color: var(--starlight-periwinkle); }
 
-        /* ============================================================
-           RESULTS DASHBOARD & 4-METRIC SIZE REPORT
-           ============================================================ */
+        
         .results-section {
             display: none;
             margin-top: 2rem;
@@ -631,7 +624,7 @@
             font-weight: 600;
         }
 
-        /* 4-Card Size & Performance Metric Grid */
+        
         .metrics-grid-quad {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -679,7 +672,7 @@
         .metric-card-val.accent { color: var(--starlight-periwinkle); }
         .metric-card-val.emerald { color: var(--aurora-emerald); }
 
-        /* Payload Ratio Distribution Bar */
+        
         .ratio-box {
             margin-bottom: 1.5rem;
             background: rgba(0, 0, 0, 0.4);
@@ -711,7 +704,7 @@
             transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Download Action Button */
+        
         .btn-download-action {
             display: flex;
             align-items: center;
@@ -737,7 +730,7 @@
             box-shadow: 0 8px 24px var(--aurora-glow);
         }
 
-        /* Footer */
+        
         footer {
             text-align: center;
             color: var(--slate-muted);
@@ -760,11 +753,11 @@
 </head>
 <body>
 
-<!-- Interactive Particle Starfield Background Canvas -->
+
 <canvas id="starfieldCanvas"></canvas>
 
 <div class="container">
-    <!-- Header -->
+    
     <header>
         <div class="top-badge">
             <div class="badge-pulse-dot"></div>
@@ -773,7 +766,7 @@
         <h1>DEFLATE-<span>X</span></h1>
         <p class="subtitle">Lossless compression engine powered by LZ77 sliding-window dictionary matching and dynamic Huffman entropy coding.</p>
         
-        <!-- Quick Demo Presets -->
+       
         <div class="presets-row">
             <span class="presets-label">Quick Samples:</span>
             <button class="preset-chip" onclick="loadSamplePreset('cpp')">C++ Source</button>
@@ -782,7 +775,7 @@
         </div>
     </header>
 
-    <!-- Navigation Mode Switcher -->
+    
     <div class="tab-bar">
         <button class="tab-btn active" id="tabCompress" onclick="switchMode('compress')">
             <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line><line x1="12" y1="8" x2="12" y2="16"></line></svg>
@@ -794,11 +787,11 @@
         </button>
     </div>
 
-    <!-- Main Workspace Card -->
+    
     <div class="main-card">
         <div class="card-glow-edge"></div>
 
-        <!-- Drag & Drop Zone -->
+       
         <div class="dropzone" id="dropzone" onclick="triggerFileInput()">
             <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelected(event)">
             
@@ -821,7 +814,7 @@
             </div>
         </div>
 
-        <!-- File Ingress Card (Metadata only: Name & Size; Zero internal content exposed) -->
+        
         <div class="file-ingress-card" id="fileIngressCard">
             <div class="scan-beam" id="scanBeam"></div>
             <div class="file-left-group">
@@ -839,19 +832,19 @@
             <span class="file-size-badge" id="ingressFileSize">0 KB</span>
         </div>
 
-        <!-- Error Notification -->
+        
         <div class="error-notification" id="errorNotification" style="display: none;">
             <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
             <span id="errorMsgText">An error occurred</span>
         </div>
 
-        <!-- Primary Action Button -->
+        
         <button class="btn-action-primary" id="processBtn" disabled onclick="startProcessingWithAnimation()">
             <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
             <span id="processBtnText">Compress to .dfx Archive</span>
         </button>
 
-        <!-- Compression Engine Animated Progress Stage with Letter Scattering -->
+        
         <div class="compression-progress-stage" id="progressStage">
             <div class="stage-header">
                 <div class="stage-title">
@@ -861,7 +854,7 @@
                 <span class="stage-percent" id="stagePercent">0%</span>
             </div>
 
-            <!-- Letter Scattering Progress Track -->
+           
             <div class="scatter-track-wrapper" id="scatterTrackWrapper">
                 <canvas id="scatterCanvas"></canvas>
                 <div class="stage-bar-track" id="stageBarTrack">
@@ -877,7 +870,7 @@
             </div>
         </div>
 
-        <!-- Results Dashboard with Size Metrics Report -->
+        
         <div class="results-section" id="resultsSection">
             <div class="results-header-bar">
                 <div class="results-title">
@@ -887,7 +880,7 @@
                 <div class="latency-pill" id="latencyBadge">Completed in 14ms</div>
             </div>
 
-            <!-- 4-Card Size & Performance Grid -->
+            
             <div class="metrics-grid-quad">
                 <div class="metric-card">
                     <div class="metric-card-label" id="metricLabel1">Original Size</div>
@@ -907,7 +900,7 @@
                 </div>
             </div>
 
-            <!-- Distribution Ratio Track -->
+            
             <div class="ratio-box" id="ratioBox">
                 <div class="ratio-labels">
                     <span>Compressed Payload Distribution</span>
@@ -918,7 +911,7 @@
                 </div>
             </div>
 
-            <!-- Download Button -->
+            
             <a class="btn-download-action" id="downloadBtn" download="output.dfx">
                 <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                 <span id="downloadBtnLabel">Download File</span>
@@ -926,7 +919,7 @@
         </div>
     </div>
 
-    <!-- Tech Specs Footer -->
+   
     <footer>
         <span><svg class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Backend: C++ Engine Architecture</span>
         <span>&bull;</span>
@@ -937,9 +930,7 @@
 </div>
 
 <script>
-/* =========================================================================
-   INTERACTIVE COSMIC STARFIELD BACKGROUND CANVAS
-   ========================================================================= */
+
 const canvas = document.getElementById('starfieldCanvas');
 const ctx = canvas.getContext('2d');
 let stars = [];
@@ -984,10 +975,7 @@ function drawStarfield() {
 initStarfield();
 drawStarfield();
 
-/* =========================================================================
-   LETTER SCATTERING PARTICLE SYSTEM
-   Uses abstract compression glyphs and binary digits (Zero private data exposed)
-   ========================================================================= */
+
 const sCanvas = document.getElementById('scatterCanvas');
 const sCtx = sCanvas.getContext('2d');
 let letterParticles = [];
@@ -1002,13 +990,13 @@ function resizeScatterCanvas() {
 }
 window.addEventListener('resize', resizeScatterCanvas);
 
-// Abstract compression symbols and binary bits (never exposes user's internal file text)
+
 const abstractGlyphs = ["0", "1", "0", "1", "#", "*", "&", "%", "x", "+", "z", "F", "7", "k", "E", "Δ", "λ"];
 
 function spawnLetterParticle(progressPercent) {
     if (!sCanvas.width) resizeScatterCanvas();
     
-    // Position of the moving head of the progress bar
+    
     const originX = (progressPercent / 100) * sCanvas.width;
     const originY = sCanvas.height - 4;
 
@@ -1021,7 +1009,7 @@ function spawnLetterParticle(progressPercent) {
         x: originX + (Math.random() - 0.5) * 6,
         y: originY,
         vx: (Math.random() - 0.5) * 3.2,
-        vy: -(Math.random() * 2.8 + 2.2), // Upward scatter
+        vy: -(Math.random() * 2.8 + 2.2), 
         alpha: 1.0,
         size: Math.floor(Math.random() * 5) + 12,
         rotation: (Math.random() - 0.5) * 0.4,
@@ -1061,9 +1049,7 @@ function updateAndDrawScatterParticles() {
     }
 }
 
-/* =========================================================================
-   DEFLATE-X ENGINE (Bitstream 100% Identical to full.cpp)
-   ========================================================================= */
+
 const WINDOW = 4096;
 const MIN_MATCH = 3;
 const MAX_MATCH = 258;
@@ -1303,9 +1289,7 @@ function decompressData(uint8Array) {
     return out;
 }
 
-/* =========================================================================
-   UI CONTROLLER & METRIC REPORT LOGIC
-   ========================================================================= */
+
 let currentMode = 'compress';
 let selectedFile = null;
 let currentFileData = null;
@@ -1383,7 +1367,7 @@ function loadFileWithAnimation(file) {
     reader.readAsArrayBuffer(file);
 }
 
-// Preset Quick Sample Loader
+
 function loadSamplePreset(type) {
     switchMode('compress');
     let text = "";
@@ -1409,7 +1393,7 @@ function loadSamplePreset(type) {
     loadFileWithAnimation(new File([currentFileData], name, { type: "text/plain" }));
 }
 
-// Drag & Drop Handlers
+
 const dropzone = document.getElementById('dropzone');
 ['dragenter', 'dragover'].forEach(name => {
     dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
@@ -1422,7 +1406,7 @@ dropzone.addEventListener('drop', (e) => {
     if (file) loadFileWithAnimation(file);
 });
 
-// Processing Animation Pipeline with Abstract Letter Scattering
+
 function startProcessingWithAnimation() {
     if (!currentFileData || currentFileData.length === 0) {
         showError("Please select a file first."); return;
@@ -1473,7 +1457,7 @@ function startProcessingWithAnimation() {
             log1.textContent = step.l1;
             log2.textContent = step.l2;
 
-            // Spawn abstract glyphs from moving tip
+            
             for (let k = 0; k < 3; k++) {
                 spawnLetterParticle(progress);
             }
@@ -1504,7 +1488,7 @@ function startProcessingWithAnimation() {
                         backendSource = "C++ Engine (full.cpp)";
                     }
                 } catch (netErr) {
-                    // Fall back if C++ backend is not yet started
+                   
                 }
 
                 if (!calledCpp) {
@@ -1528,7 +1512,7 @@ function startProcessingWithAnimation() {
                         backendSource = "C++ Engine (full.cpp)";
                     }
                 } catch (netErr) {
-                    // Fall back
+                    
                 }
 
                 if (!calledCpp) {
@@ -1549,7 +1533,7 @@ function startProcessingWithAnimation() {
     }
 }
 
-// 4-Card Size Report: Original Size, Compressed Size, Space Saved %, Ratio %
+
 function renderCompressionResults(origSize, compSize, elapsedMs, backendSource = "C++ Engine (full.cpp)") {
     const section = document.getElementById('resultsSection');
     section.style.display = 'block';
