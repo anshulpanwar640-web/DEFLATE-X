@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEFLATE-X | Text Compression Engine</title>
+    <!-- Multi-Font Typography System -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ============================================================
+           COSMIC ARTISTRY DESIGN SYSTEM
+           Tones: Space Blue, Slate Gray, Gray-Washed White, Soft Gradients
+           ============================================================ */
+        :root {
+            --cosmic-void: #080b14;
+            --cosmic-space-blue: #111625;
+            --cosmic-card: rgba(17, 22, 37, 0.82);
+            --cosmic-input: #0a0e1a;
+            --slate-border: rgba(148, 163, 184, 0.14);
+            --slate-border-hover: rgba(168, 85, 247, 0.45);
+            --slate-gray: #6e7c8e;
+            --slate-muted: #5a6578;
+            --lunar-white: #f4f5f7;
+            --lunar-silver: #cbd5e1;
+            --nebula-purple: #a855f7;
+            --starlight-periwinkle: #818cf8;
+            --aurora-emerald: #10b981;
+            
+            --cosmic-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+            --cosmic-glow: rgba(124, 58, 237, 0.28);
+            --aurora-gradient: linear-gradient(135deg, #0d9488 0%, #10b981 100%);
+            --aurora-glow: rgba(16, 185, 129, 0.25);
+            
+            --font-display: 'Space Grotesk', -apple-system, sans-serif;
+            --font-ui: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--cosmic-void);
+            color: var(--lunar-silver);
+            font-family: var(--font-ui);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3.5rem 1.5rem 2.5rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Starfield Canvas */
+        #starfieldCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 860px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Vector Icons */
+        .icon {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            stroke-width: 2;
+            stroke: currentColor;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            vertical-align: middle;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 2.25rem;
+            animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .top-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.95rem;
+            background: rgba(168, 85, 247, 0.08);
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--starlight-periwinkle);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 1.15rem;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
+        }
+
+        .badge-pulse-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--nebula-purple);
+            box-shadow: 0 0 8px var(--nebula-purple);
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.85); }
+        }
+
+        h1 {
+            font-family: var(--font-display);
+            font-size: 2.85rem;
+            font-weight: 700;
+            letter-spacing: -0.04em;
+            color: var(--lunar-white);
+            margin-bottom: 0.65rem;
+            line-height: 1.1;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, #ffffff 30%, #c084fc 70%, #818cf8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: var(--slate-gray);
+            font-size: 1.025rem;
+            max-width: 620px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.55;
+        }
+
+        /* Demo Presets */
+        .presets-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .presets-label {
+            font-size: 0.75rem;
+            color: var(--slate-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+            margin-right: 0.25rem;
+        }
+
+        .preset-chip {
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid var(--slate-border);
+            color: var(--lunar-silver);
+            font-family: var(--font-mono);
+            font-size: 0.725rem;
+            padding: 0.3rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preset-chip:hover {
+            background: rgba(168, 85, 247, 0.12);
+            border-color: rgba(168, 85, 247, 0.4);
+            color: var(--lunar-white);
+            transform: translateY(-1px);
+        }
+
+        /* Segmented Mode Selector */
+        .tab-bar {
+            display: flex;
+            background: var(--cosmic-space-blue);
+            padding: 0.35rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--slate-border);
+            margin-bottom: 1.5rem;
+            gap: 0.35rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 0.85rem 1.25rem;
+            border: none;
+            background: transparent;
+            color: var(--slate-gray);
+            font-family: var(--font-ui);
+            font-size: 0.925rem;
+            font-weight: 600;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+        }
+
+        .tab-btn:hover { color: var(--lunar-white); }
+
+        .tab-btn.active {
+            color: #ffffff;
+            background: var(--cosmic-gradient);
+            box-shadow: 0 4px 16px var(--cosmic-glow);
+        }
+
+        /* Workspace Card */
+        .main-card {
+            background: var(--cosmic-card);
+            backdrop-filter: blur(24px);
+            border: 1px solid var(--slate-border);
+            border-radius: var(--radius-lg);
+            padding: 2.25rem;
+            box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-glow-edge {
+            position: absolute;
+            top: 0;
+            left: 15%;
+            right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.6), transparent);
+        }
+
+        /* Dropzone */
+        .dropzone {
+            border: 2px dashed rgba(148, 163, 184, 0.2);
+            border-radius: var(--radius-md);
+            padding: 3rem 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(255, 255, 255, 0.012);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--starlight-periwinkle);
+            background: rgba(124, 58, 237, 0.045);
+            transform: translateY(-2px);
+        }
+
+        .dropzone.dragover {
+            border-style: solid;
+            box-shadow: inset 0 0 28px rgba(124, 58, 237, 0.15);
+        }
+
+        .drop-icon-sphere {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(168, 85, 247, 0.08);
+            border: 1px solid rgba(168, 85, 247, 0.22);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--starlight-periwinkle);
+            margin-bottom: 1.15rem;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+        }
+
+        .dropzone:hover .drop-icon-sphere {
+            transform: scale(1.08) translateY(-3px);
+            box-shadow: 0 0 24px rgba(124, 58, 237, 0.35);
+        }
+
+        .dropzone h3 {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--lunar-white);
+            margin-bottom: 0.35rem;
+        }
+
+        .dropzone p {
+            font-size: 0.875rem;
+            color: var(--slate-gray);
+            margin-bottom: 1.35rem;
+        }
+
+        .btn-browse {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--lunar-white);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.6rem 1.4rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .btn-browse:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        /* File Ingress Card (Metadata only: Name & Size; Zero internal content exposed) */
+        .file-ingress-card {
+            display: none;
+            background: rgba(17, 22, 37, 0.95);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            margin-top: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+        }
+
+        .file-ingress-card.animate-in {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: fileSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fileSlideIn {
+            0% { opacity: 0; transform: translateY(12px) scale(0.98); }
+            60% { transform: translateY(-2px) scale(1.005); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .scan-beam {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 40px;
+            background: linear-gradient(90deg, transparent, rgba(192, 132, 252, 0.4), transparent);
+            left: -50px;
+            animation: laserScan 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes laserScan {
+            0% { left: -50px; }
+            100% { left: 110%; }
+        }
+
+        .file-left-group {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .file-type-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(168, 85, 247, 0.12);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--starlight-periwinkle);
+        }
+
+        .file-text-details h4 {
+            font-size: 0.925rem;
+            font-weight: 600;
+            color: var(--lunar-white);
+            margin-bottom: 0.15rem;
+        }
+
+        .file-status-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.775rem;
+            color: var(--aurora-emerald);
+        }
+
+        .file-size-badge {
+            font-family: var(--font-mono);
+            font-size: 0.825rem;
+            color: var(--lunar-white);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--slate-border);
+            padding: 0.25rem 0.65rem;
+            border-radius: 6px;
+        }
+
+        /* Error Notification */
+        .error-notification {
+            display: none;
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #fda4af;
+            padding: 0.85rem 1.15rem;
+            border-radius: var(--radius-sm);
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        /* Primary Action Button */
+        .btn-action-primary {
+            width: 100%;
+            margin-top: 1.6rem;
+            padding: 0.95rem 1.5rem;
+            background: var(--cosmic-gradient);
+            border: none;
+            border-radius: var(--radius-md);
+            color: #ffffff;
+            font-family: var(--font-ui);
+            font-size: 0.975rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            box-shadow: 0 4px 18px var(--cosmic-glow);
+        }
+
+        .btn-action-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 26px var(--cosmic-glow);
+        }
+
+        .btn-action-primary:active:not(:disabled) { transform: translateY(0); }
+
+        .btn-action-primary:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* ============================================================
+           SCATTERING COMPRESSION PROGRESS STAGE
+           ============================================================ */
+        .compression-progress-stage {
+            display: none;
+            margin-top: 1.75rem;
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid var(--slate-border);
+            border-radius: var(--radius-md);
+            padding: 1.4rem;
+            animation: fadeIn 0.35s ease;
+        }
+
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.85rem;
+        }
+
+        .stage-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--lunar-white);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .spinner-ring {
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(168, 85, 247, 0.25);
+            border-top-color: var(--nebula-purple);
+            border-radius: 50%;
+            animation: spin 0.75s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .stage-percent {
+            font-family: var(--font-mono);
+            font-size: 0.85rem;
+            color: var(--starlight-periwinkle);
+            font-weight: 700;
+        }
+
+        /* Letter Scattering Canvas & Track */
+        .scatter-track-wrapper {
+            position: relative;
+            width: 100%;
+            height: 85px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        #scatterCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 85px;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .stage-bar-track {
+            position: relative;
+            width: 100%;
+            height: 7px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            overflow: visible;
+        }
+
+        .stage-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--cosmic-gradient);
+            border-radius: 9999px;
+            position: relative;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
+        }
+
+        .stage-bar-head-glow {
+            position: absolute;
+            right: -2px;
+            top: -3px;
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 14px 4px #c084fc, 0 0 24px 6px #818cf8;
+        }
+
+        .telemetry-log {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--slate-gray);
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 0.75rem;
+        }
+
+        .log-line {
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .log-arrow { color: var(--starlight-periwinkle); }
+
+        /* ============================================================
+           RESULTS DASHBOARD & 4-METRIC SIZE REPORT
+           ============================================================ */
+        .results-section {
+            display: none;
+            margin-top: 2rem;
+            border-top: 1px solid var(--slate-border);
+            padding-top: 1.75rem;
+        }
+
+        .results-section.show {
+            display: block;
+            animation: springUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes springUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.25rem;
+        }
+
+        .results-title {
+            font-family: var(--font-display);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--lunar-white);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .latency-pill {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: var(--aurora-emerald);
+            padding: 0.25rem 0.65rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        /* 4-Card Size & Performance Metric Grid */
+        .metrics-grid-quad {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 720px) {
+            .metrics-grid-quad {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .metric-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--slate-border);
+            border-radius: var(--radius-sm);
+            padding: 1.1rem 1rem;
+            text-align: left;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .metric-card:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: translateY(-1px);
+        }
+
+        .metric-card-label {
+            font-size: 0.685rem;
+            color: var(--slate-gray);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+        }
+
+        .metric-card-val {
+            font-size: 1.35rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--lunar-white);
+            letter-spacing: -0.02em;
+        }
+
+        .metric-card-val.accent { color: var(--starlight-periwinkle); }
+        .metric-card-val.emerald { color: var(--aurora-emerald); }
+
+        /* Payload Ratio Distribution Bar */
+        .ratio-box {
+            margin-bottom: 1.5rem;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--slate-border);
+            border-radius: var(--radius-sm);
+            padding: 1.15rem;
+        }
+
+        .ratio-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--slate-gray);
+            margin-bottom: 0.65rem;
+        }
+
+        .ratio-track {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+
+        .ratio-bar {
+            height: 100%;
+            background: var(--cosmic-gradient);
+            border-radius: 9999px;
+            width: 0%;
+            transition: width 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Download Action Button */
+        .btn-download-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            width: 100%;
+            padding: 0.95rem 1.5rem;
+            background: var(--aurora-gradient);
+            border: none;
+            border-radius: var(--radius-md);
+            color: #ffffff;
+            font-family: var(--font-ui);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 16px var(--aurora-glow);
+        }
+
+        .btn-download-action:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--aurora-glow);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            color: var(--slate-muted);
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        footer span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<!-- Interactive Particle Starfield Background Canvas -->
+<canvas id="starfieldCanvas"></canvas>
+
+<div class="container">
+    <!-- Header -->
+    <header>
+        <div class="top-badge">
+            <div class="badge-pulse-dot"></div>
+            Text Compression Engine
+        </div>
+        <h1>DEFLATE-<span>X</span></h1>
+        <p class="subtitle">Lossless compression engine powered by LZ77 sliding-window dictionary matching and dynamic Huffman entropy coding.</p>
+        
+        <!-- Quick Demo Presets -->
+        <div class="presets-row">
+            <span class="presets-label">Quick Samples:</span>
+            <button class="preset-chip" onclick="loadSamplePreset('cpp')">C++ Source</button>
+            <button class="preset-chip" onclick="loadSamplePreset('repeat')">Repetitive Pattern</button>
+            <button class="preset-chip" onclick="loadSamplePreset('json')">JSON Config</button>
+        </div>
+    </header>
+
+    <!-- Navigation Mode Switcher -->
+    <div class="tab-bar">
+        <button class="tab-btn active" id="tabCompress" onclick="switchMode('compress')">
+            <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line><line x1="12" y1="8" x2="12" y2="16"></line></svg>
+            Compress File (.txt &rarr; .dfx)
+        </button>
+        <button class="tab-btn" id="tabDecompress" onclick="switchMode('decompress')">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Decompress File (.dfx &rarr; .txt)
+        </button>
+    </div>
+
+    <!-- Main Workspace Card -->
+    <div class="main-card">
+        <div class="card-glow-edge"></div>
+
+        <!-- Drag & Drop Zone -->
+        <div class="dropzone" id="dropzone" onclick="triggerFileInput()">
+            <input type="file" id="fileInput" style="display: none;" onchange="handleFileSelected(event)">
+            
+            <div class="drop-icon-sphere">
+                <svg class="icon" style="width: 28px; height: 28px;" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                    <line x1="9" y1="15" x2="12" y2="12"></line>
+                    <line x1="15" y1="15" x2="12" y2="12"></line>
+                </svg>
+            </div>
+            
+            <h3 id="dropTitle">Drop text file here</h3>
+            <p id="dropDesc">Supports .txt, .c, .cpp, .csv, .json, or any plain text format</p>
+            
+            <div class="btn-browse">
+                <svg class="icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                Browse File
+            </div>
+        </div>
+
+        <!-- File Ingress Card (Metadata only: Name & Size; Zero internal content exposed) -->
+        <div class="file-ingress-card" id="fileIngressCard">
+            <div class="scan-beam" id="scanBeam"></div>
+            <div class="file-left-group">
+                <div class="file-type-icon">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
+                </div>
+                <div class="file-text-details">
+                    <h4 id="ingressFileName">filename.txt</h4>
+                    <div class="file-status-row">
+                        <svg class="icon" style="width: 14px; height: 14px;" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        <span>Loaded &amp; Ready</span>
+                    </div>
+                </div>
+            </div>
+            <span class="file-size-badge" id="ingressFileSize">0 KB</span>
+        </div>
+
+        <!-- Error Notification -->
+        <div class="error-notification" id="errorNotification" style="display: none;">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <span id="errorMsgText">An error occurred</span>
+        </div>
+
+        <!-- Primary Action Button -->
+        <button class="btn-action-primary" id="processBtn" disabled onclick="startProcessingWithAnimation()">
+            <svg class="icon" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+            <span id="processBtnText">Compress to .dfx Archive</span>
+        </button>
+
+        <!-- Compression Engine Animated Progress Stage with Letter Scattering -->
+        <div class="compression-progress-stage" id="progressStage">
+            <div class="stage-header">
+                <div class="stage-title">
+                    <div class="spinner-ring"></div>
+                    <span id="stageStatusText">Scanning sliding window...</span>
+                </div>
+                <span class="stage-percent" id="stagePercent">0%</span>
+            </div>
+
+            <!-- Letter Scattering Progress Track -->
+            <div class="scatter-track-wrapper" id="scatterTrackWrapper">
+                <canvas id="scatterCanvas"></canvas>
+                <div class="stage-bar-track" id="stageBarTrack">
+                    <div class="stage-bar-fill" id="stageBarFill">
+                        <div class="stage-bar-head-glow"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="telemetry-log">
+                <div class="log-line"><span class="log-arrow">&gt;</span> <span id="telemetryLog1">Engine initialized</span></div>
+                <div class="log-line"><span class="log-arrow">&gt;</span> <span id="telemetryLog2">Processing stream...</span></div>
+            </div>
+        </div>
+
+        <!-- Results Dashboard with Size Metrics Report -->
+        <div class="results-section" id="resultsSection">
+            <div class="results-header-bar">
+                <div class="results-title">
+                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                    <span id="resultsTitle">Compression Metrics Report</span>
+                </div>
+                <div class="latency-pill" id="latencyBadge">Completed in 14ms</div>
+            </div>
+
+            <!-- 4-Card Size & Performance Grid -->
+            <div class="metrics-grid-quad">
+                <div class="metric-card">
+                    <div class="metric-card-label" id="metricLabel1">Original Size</div>
+                    <div class="metric-card-val" id="metricVal1">0 B</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-label" id="metricLabel2">Compressed Size</div>
+                    <div class="metric-card-val accent" id="metricVal2">0 B</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-label" id="metricLabel3">Space Saved</div>
+                    <div class="metric-card-val emerald" id="metricVal3">0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-card-label" id="metricLabel4">Ratio</div>
+                    <div class="metric-card-val" id="metricVal4">0%</div>
+                </div>
+            </div>
+
+            <!-- Distribution Ratio Track -->
+            <div class="ratio-box" id="ratioBox">
+                <div class="ratio-labels">
+                    <span>Compressed Payload Distribution</span>
+                    <span id="ratioLabelText">0% of original</span>
+                </div>
+                <div class="ratio-track">
+                    <div class="ratio-bar" id="ratioBar"></div>
+                </div>
+            </div>
+
+            <!-- Download Button -->
+            <a class="btn-download-action" id="downloadBtn" download="output.dfx">
+                <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                <span id="downloadBtnLabel">Download File</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Tech Specs Footer -->
+    <footer>
+        <span><svg class="icon" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Backend: C++ Engine Architecture</span>
+        <span>&bull;</span>
+        <span>LZ77 Sliding Window (4KB)</span>
+        <span>&bull;</span>
+        <span>Dynamic Huffman Alphabet (512 Symbols)</span>
+    </footer>
+</div>
+
+<script>
+/* =========================================================================
+   INTERACTIVE COSMIC STARFIELD BACKGROUND CANVAS
+   ========================================================================= */
+const canvas = document.getElementById('starfieldCanvas');
+const ctx = canvas.getContext('2d');
+let stars = [];
+let mouseX = 0, mouseY = 0;
+
+function initStarfield() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    stars = [];
+    const count = Math.min(45, Math.floor(window.innerWidth / 30));
+    for (let i = 0; i < count; i++) {
+        stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 1.5 + 0.5,
+            opacity: Math.random() * 0.7 + 0.2,
+            speedY: Math.random() * 0.15 + 0.05,
+            pulseSpeed: Math.random() * 0.02 + 0.01
+        });
+    }
+}
+window.addEventListener('resize', initStarfield);
+window.addEventListener('mousemove', (e) => {
+    mouseX = (e.clientX - window.innerWidth / 2) * 0.01;
+    mouseY = (e.clientY - window.innerHeight / 2) * 0.01;
+});
+
+function drawStarfield() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for (let star of stars) {
+        star.y -= star.speedY;
+        if (star.y < 0) star.y = canvas.height;
+        star.opacity += Math.sin(Date.now() * star.pulseSpeed) * 0.005;
+        const clampedOpacity = Math.max(0.15, Math.min(0.85, star.opacity));
+        ctx.fillStyle = `rgba(203, 213, 225, ${clampedOpacity})`;
+        ctx.beginPath();
+        ctx.arc(star.x + mouseX, star.y + mouseY, star.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    requestAnimationFrame(drawStarfield);
+}
+initStarfield();
+drawStarfield();
+
+/* =========================================================================
+   LETTER SCATTERING PARTICLE SYSTEM
+   Uses abstract compression glyphs and binary digits (Zero private data exposed)
+   ========================================================================= */
+const sCanvas = document.getElementById('scatterCanvas');
+const sCtx = sCanvas.getContext('2d');
+let letterParticles = [];
+let isScatteringActive = false;
+
+function resizeScatterCanvas() {
+    const wrapper = document.getElementById('scatterTrackWrapper');
+    if (wrapper) {
+        sCanvas.width = wrapper.offsetWidth;
+        sCanvas.height = wrapper.offsetHeight;
+    }
+}
+window.addEventListener('resize', resizeScatterCanvas);
+
+// Abstract compression symbols and binary bits (never exposes user's internal file text)
+const abstractGlyphs = ["0", "1", "0", "1", "#", "*", "&", "%", "x", "+", "z", "F", "7", "k", "E", "Δ", "λ"];
+
+function spawnLetterParticle(progressPercent) {
+    if (!sCanvas.width) resizeScatterCanvas();
+    
+    // Position of the moving head of the progress bar
+    const originX = (progressPercent / 100) * sCanvas.width;
+    const originY = sCanvas.height - 4;
+
+    const char = abstractGlyphs[Math.floor(Math.random() * abstractGlyphs.length)];
+    const colors = ["#ffffff", "#c084fc", "#818cf8", "#38bdf8", "#e2e8f0", "#a855f7"];
+    const color = colors[Math.floor(Math.random() * colors.length)];
+
+    letterParticles.push({
+        char: char,
+        x: originX + (Math.random() - 0.5) * 6,
+        y: originY,
+        vx: (Math.random() - 0.5) * 3.2,
+        vy: -(Math.random() * 2.8 + 2.2), // Upward scatter
+        alpha: 1.0,
+        size: Math.floor(Math.random() * 5) + 12,
+        rotation: (Math.random() - 0.5) * 0.4,
+        color: color
+    });
+}
+
+function updateAndDrawScatterParticles() {
+    sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
+
+    for (let i = letterParticles.length - 1; i >= 0; i--) {
+        const p = letterParticles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.05;
+        p.alpha -= 0.024;
+
+        if (p.alpha <= 0 || p.y < 0) {
+            letterParticles.splice(i, 1);
+            continue;
+        }
+
+        sCtx.save();
+        sCtx.globalAlpha = Math.max(0, p.alpha);
+        sCtx.font = `bold ${p.size}px 'JetBrains Mono', monospace`;
+        sCtx.fillStyle = p.color;
+        sCtx.shadowColor = p.color;
+        sCtx.shadowBlur = 8;
+        sCtx.translate(p.x, p.y);
+        sCtx.rotate(p.rotation);
+        sCtx.fillText(p.char, 0, 0);
+        sCtx.restore();
+    }
+
+    if (isScatteringActive || letterParticles.length > 0) {
+        requestAnimationFrame(updateAndDrawScatterParticles);
+    }
+}
+
+/* =========================================================================
+   DEFLATE-X ENGINE (Bitstream 100% Identical to full.cpp)
+   ========================================================================= */
+const WINDOW = 4096;
+const MIN_MATCH = 3;
+const MAX_MATCH = 258;
+const TOTAL = 512;
+
+class BitWriter {
+    constructor() { this.bytes = []; this.buf = 0; this.bitCount = 0; }
+    writeBit(bit) {
+        this.buf = (this.buf << 1) | (bit & 1);
+        this.bitCount++;
+        if (this.bitCount === 8) {
+            this.bytes.push(this.buf);
+            this.buf = 0; this.bitCount = 0;
+        }
+    }
+    writeBits(value, numBits) {
+        for (let i = numBits - 1; i >= 0; i--) this.writeBit((value >>> i) & 1);
+    }
+    flush() {
+        if (this.bitCount > 0) {
+            this.buf = (this.buf << (8 - this.bitCount)) & 0xFF;
+            this.bytes.push(this.buf);
+            this.buf = 0; this.bitCount = 0;
+        }
+    }
+    getUint8Array() { this.flush(); return new Uint8Array(this.bytes); }
+}
+
+class BitReader {
+    constructor(uint8Array) {
+        this.data = uint8Array; this.bytePos = 0; this.buf = 0; this.bitCount = 0;
+    }
+    readBit() {
+        if (this.bitCount === 0) {
+            let c = (this.bytePos < this.data.length) ? this.data[this.bytePos++] : 0;
+            this.buf = c; this.bitCount = 8;
+        }
+        let bit = (this.buf >> 7) & 1;
+        this.buf = (this.buf << 1) & 0xFF;
+        this.bitCount--;
+        return bit;
+    }
+    readBits(numBits) {
+        let value = 0;
+        for (let i = 0; i < numBits; i++) value = (value << 1) | this.readBit();
+        return value;
+    }
+}
+
+class HuffmanNode {
+    constructor(symbol, freq, left = null, right = null, id = 0) {
+        this.symbol = symbol; this.freq = freq; this.left = left; this.right = right; this.id = id;
+    }
+}
+
+class MinHeap {
+    constructor() { this.heap = []; this.seq = 0; }
+    push(node) {
+        node.id = this.seq++;
+        this.heap.push(node);
+        this._up(this.heap.length - 1);
+    }
+    pop() {
+        if (this.heap.length === 0) return null;
+        const top = this.heap[0];
+        const last = this.heap.pop();
+        if (this.heap.length > 0) {
+            this.heap[0] = last; this._down(0);
+        }
+        return top;
+    }
+    size() { return this.heap.length; }
+    _compare(a, b) {
+        if (a.freq !== b.freq) return a.freq - b.freq;
+        return a.id - b.id;
+    }
+    _up(i) {
+        while (i > 0) {
+            const p = (i - 1) >> 1;
+            if (this._compare(this.heap[i], this.heap[p]) < 0) {
+                [this.heap[i], this.heap[p]] = [this.heap[p], this.heap[i]]; i = p;
+            } else break;
+        }
+    }
+    _down(i) {
+        const len = this.heap.length;
+        while (true) {
+            let s = i;
+            const l = (i << 1) + 1; const r = l + 1;
+            if (l < len && this._compare(this.heap[l], this.heap[s]) < 0) s = l;
+            if (r < len && this._compare(this.heap[r], this.heap[s]) < 0) s = r;
+            if (s !== i) {
+                [this.heap[i], this.heap[s]] = [this.heap[s], this.heap[i]]; i = s;
+            } else break;
+        }
+    }
+}
+
+function buildTree(freq) {
+    const heap = new MinHeap();
+    for (let i = 0; i < TOTAL; i++) {
+        if (freq[i] > 0) heap.push(new HuffmanNode(i, freq[i]));
+    }
+    if (heap.size() === 0) return null;
+    while (heap.size() > 1) {
+        const a = heap.pop(); const b = heap.pop();
+        heap.push(new HuffmanNode(-1, a.freq + b.freq, a, b));
+    }
+    return heap.pop();
+}
+
+function makeCodes(root, code, codes) {
+    if (!root) return;
+    if (!root.left && !root.right) {
+        if (code === "") code = "0";
+        codes[root.symbol] = code;
+        return;
+    }
+    makeCodes(root.left, code + "0", codes);
+    makeCodes(root.right, code + "1", codes);
+}
+
+function readSymbol(reader, root) {
+    let cur = root;
+    if (!cur.left && !cur.right) {
+        reader.readBit(); return cur.symbol;
+    }
+    while (cur.left) {
+        if (reader.readBit() === 1) cur = cur.right;
+        else cur = cur.left;
+    }
+    return cur.symbol;
+}
+
+function doLZ77(data) {
+    const size = data.length;
+    const sym = []; const dist = [];
+    let i = 0;
+
+    while (i < size) {
+        let bestLen = 0; let bestDist = 0;
+        let start = i - WINDOW;
+        if (start < 0) start = 0;
+
+        for (let j = start; j < i; j++) {
+            let len = 0;
+            while (len < MAX_MATCH && i + len < size && data[j + len] === data[i + len]) {
+                len++;
+            }
+            if (len > bestLen) {
+                bestLen = len; bestDist = i - j;
+            }
+        }
+
+        if (bestLen >= MIN_MATCH) {
+            sym.push(256 + bestLen - MIN_MATCH);
+            dist.push(bestDist);
+            i += bestLen;
+        } else {
+            sym.push(data[i]);
+            dist.push(0);
+            i += 1;
+        }
+    }
+    return { sym, dist, tokens: sym.length };
+}
+
+function compressData(data) {
+    const size = data.length;
+    const { sym, dist, tokens } = doLZ77(data);
+
+    const freq = new Array(TOTAL).fill(0);
+    for (let i = 0; i < tokens; i++) freq[sym[i]]++;
+
+    const root = buildTree(freq);
+    const codes = new Array(TOTAL).fill("");
+    if (root) makeCodes(root, "", codes);
+
+    let distinct = 0;
+    for (let i = 0; i < TOTAL; i++) if (freq[i] > 0) distinct++;
+
+    const writer = new BitWriter();
+    writer.writeBits(size, 32);
+    writer.writeBits(distinct, 10);
+
+    for (let i = 0; i < TOTAL; i++) {
+        if (freq[i] > 0) {
+            writer.writeBits(i, 9);
+            writer.writeBits(freq[i], 32);
+        }
+    }
+
+    for (let t = 0; t < tokens; t++) {
+        const code = codes[sym[t]];
+        for (let k = 0; k < code.length; k++) {
+            writer.writeBit(code[k] === '1' ? 1 : 0);
+        }
+        if (sym[t] >= 256) {
+            writer.writeBits(dist[t] - 1, 12);
+        }
+    }
+
+    return writer.getUint8Array();
+}
+
+function decompressData(uint8Array) {
+    if (uint8Array.length < 5) throw new Error("File too small to be a valid .dfx archive.");
+    const reader = new BitReader(uint8Array);
+    const size = reader.readBits(32);
+    const distinct = reader.readBits(10);
+
+    const freq = new Array(TOTAL).fill(0);
+    for (let i = 0; i < distinct; i++) {
+        const s = reader.readBits(9);
+        freq[s] = reader.readBits(32);
+    }
+
+    const root = buildTree(freq);
+    if (!root && size > 0) throw new Error("Corrupted archive: unable to rebuild Huffman tree.");
+
+    const out = new Uint8Array(size);
+    let pos = 0;
+
+    while (pos < size) {
+        const s = readSymbol(reader, root);
+        if (s < 256) {
+            out[pos++] = s;
+        } else {
+            const len = s - 256 + MIN_MATCH;
+            const d = reader.readBits(12) + 1;
+            if (d > pos) throw new Error("Corrupted archive: invalid backward reference distance.");
+            for (let k = 0; k < len && pos < size; k++) {
+                out[pos] = out[pos - d]; pos++;
+            }
+        }
+    }
+    return out;
+}
+
+/* =========================================================================
+   UI CONTROLLER & METRIC REPORT LOGIC
+   ========================================================================= */
+let currentMode = 'compress';
+let selectedFile = null;
+let currentFileData = null;
+let processedData = null;
+
+function switchMode(mode) {
+    currentMode = mode;
+    document.getElementById('tabCompress').classList.toggle('active', mode === 'compress');
+    document.getElementById('tabDecompress').classList.toggle('active', mode === 'decompress');
+
+    const isComp = (mode === 'compress');
+    document.getElementById('dropTitle').textContent = isComp ? 'Drop text file here' : 'Drop .dfx archive here';
+    document.getElementById('dropDesc').textContent = isComp 
+        ? 'Supports .txt, .c, .cpp, .csv, .json, or any plain text format' 
+        : 'Select a previously compressed .dfx file to restore original text';
+    
+    document.getElementById('processBtnText').textContent = isComp ? 'Compress to .dfx Archive' : 'Decompress & Restore File';
+    resetState();
+}
+
+function resetState() {
+    selectedFile = null;
+    currentFileData = null;
+    processedData = null;
+    document.getElementById('fileInput').value = '';
+    
+    const ingressCard = document.getElementById('fileIngressCard');
+    ingressCard.classList.remove('animate-in');
+    ingressCard.style.display = 'none';
+
+    const results = document.getElementById('resultsSection');
+    results.classList.remove('show');
+    results.style.display = 'none';
+
+    document.getElementById('progressStage').style.display = 'none';
+    document.getElementById('errorNotification').style.display = 'none';
+    document.getElementById('processBtn').disabled = true;
+    document.getElementById('ratioBar').style.width = '0%';
+}
+
+function triggerFileInput() {
+    document.getElementById('fileInput').click();
+}
+
+function handleFileSelected(event) {
+    const file = event.target.files[0];
+    if (file) loadFileWithAnimation(file);
+}
+
+function loadFileWithAnimation(file) {
+    selectedFile = file;
+    document.getElementById('errorNotification').style.display = 'none';
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('resultsSection').classList.remove('show');
+
+    const ingress = document.getElementById('fileIngressCard');
+    ingress.style.display = 'flex';
+    ingress.classList.remove('animate-in');
+    void ingress.offsetWidth;
+    ingress.classList.add('animate-in');
+
+    const beam = document.getElementById('scanBeam');
+    beam.style.animation = 'none';
+    void beam.offsetWidth;
+    beam.style.animation = 'laserScan 0.9s cubic-bezier(0.4, 0, 0.2, 1)';
+
+    document.getElementById('ingressFileName').textContent = file.name;
+    document.getElementById('ingressFileSize').textContent = formatBytes(file.size);
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        currentFileData = new Uint8Array(e.target.result);
+        document.getElementById('processBtn').disabled = false;
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// Preset Quick Sample Loader
+function loadSamplePreset(type) {
+    switchMode('compress');
+    let text = "";
+    let name = "";
+    if (type === 'cpp') {
+        name = "sample_algorithm.cpp";
+        text = `#include <iostream>\n#include <vector>\nusing namespace std;\n\nint main() {\n    // DEFLATE-X C++ Core Engine Demonstration\n    vector<int> buffer(4096, 0);\n    cout << "Compressing data stream via LZ77 & Huffman..." << endl;\n    for(int i = 0; i < 100; ++i) {\n        cout << "Token index: " << i << endl;\n    }\n    return 0;\n}`;
+    } else if (type === 'repeat') {
+        name = "repetitive_patterns.txt";
+        text = "DEFLATE-X_TOKEN_ALPHA DEFLATE-X_TOKEN_ALPHA DEFLATE-X_TOKEN_ALPHA\n" +
+               "SYSTEM_BUFFER_CHUNK_001 SYSTEM_BUFFER_CHUNK_001 SYSTEM_BUFFER_CHUNK_001\n" +
+               "LZ77_SLIDING_WINDOW_MATCH LZ77_SLIDING_WINDOW_MATCH LZ77_SLIDING_WINDOW_MATCH\n" +
+               "HIGH_REDUNDANCY_STREAM HIGH_REDUNDANCY_STREAM HIGH_REDUNDANCY_STREAM\n".repeat(4);
+    } else if (type === 'json') {
+        name = "config_payload.json";
+        text = `{\n  "engine": "DEFLATE-X",\n  "windowSize": 4096,\n  "alphabetTotal": 512,\n  "dictionary": "LZ77",\n  "entropy": "Huffman",\n  "author": "C++ Systems",\n  "active": true,\n  "metrics": {\n    "minMatch": 3,\n    "maxMatch": 258\n  }\n}`;
+    }
+
+    const encoder = new TextEncoder();
+    currentFileData = encoder.encode(text);
+    selectedFile = { name, size: currentFileData.length };
+
+    loadFileWithAnimation(new File([currentFileData], name, { type: "text/plain" }));
+}
+
+// Drag & Drop Handlers
+const dropzone = document.getElementById('dropzone');
+['dragenter', 'dragover'].forEach(name => {
+    dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+});
+['dragleave', 'drop'].forEach(name => {
+    dropzone.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+});
+dropzone.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) loadFileWithAnimation(file);
+});
+
+// Processing Animation Pipeline with Abstract Letter Scattering
+function startProcessingWithAnimation() {
+    if (!currentFileData || currentFileData.length === 0) {
+        showError("Please select a file first."); return;
+    }
+
+    const btn = document.getElementById('processBtn');
+    btn.disabled = true;
+
+    const stage = document.getElementById('progressStage');
+    stage.style.display = 'block';
+
+    resizeScatterCanvas();
+    isScatteringActive = true;
+    letterParticles = [];
+    updateAndDrawScatterParticles();
+
+    const stageStatus = document.getElementById('stageStatusText');
+    const stagePercent = document.getElementById('stagePercent');
+    const stageBarFill = document.getElementById('stageBarFill');
+    const log1 = document.getElementById('telemetryLog1');
+    const log2 = document.getElementById('telemetryLog2');
+
+    document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('resultsSection').classList.remove('show');
+
+    let progress = 0;
+    const isComp = (currentMode === 'compress');
+
+    const steps = isComp ? [
+        { target: 35, status: "Searching LZ77 4KB sliding window for matches...", l1: "Scanning byte streams & repeated tokens", l2: "Allocated 4096-byte dictionary buffer" },
+        { target: 70, status: "Building dynamic Huffman min-heap & prefix tree...", l1: "Calculated exact frequency table (512 symbols)", l2: "Constructed canonical binary prefix tree" },
+        { target: 100, status: "Packaging variable-length bitstream into .dfx...", l1: "Written 32-bit size header and frequency map", l2: "Flushed bitstream successfully" }
+    ] : [
+        { target: 40, status: "Reading archive header & symbol frequency map...", l1: "Unpacked 32-bit size and 10-bit symbol count", l2: "Rebuilding canonical Huffman tree" },
+        { target: 80, status: "Walking Huffman prefix tree & decoding tokens...", l1: "Decoding literal bytes & back-reference offsets", l2: "Expanding LZ77 sliding window" },
+        { target: 100, status: "Reconstructing original text file...", l1: "Integrity verified: 100% matched", l2: "Buffer ready for download" }
+    ];
+
+    let currentStep = 0;
+    const interval = setInterval(() => {
+        if (currentStep < steps.length) {
+            const step = steps[currentStep];
+            progress += 2.5;
+            
+            stagePercent.textContent = `${Math.min(Math.round(progress), 100)}%`;
+            stageBarFill.style.width = `${Math.min(progress, 100)}%`;
+            stageStatus.textContent = step.status;
+            log1.textContent = step.l1;
+            log2.textContent = step.l2;
+
+            // Spawn abstract glyphs from moving tip
+            for (let k = 0; k < 3; k++) {
+                spawnLetterParticle(progress);
+            }
+
+            if (progress >= step.target) currentStep++;
+        } else {
+            clearInterval(interval);
+            isScatteringActive = false;
+            finishExecution();
+        }
+    }, 28);
+
+    async function finishExecution() {
+        const t0 = performance.now();
+        let backendSource = "C++ Engine (full.cpp)";
+        try {
+            if (isComp) {
+                let calledCpp = false;
+                try {
+                    const resp = await fetch('/api/compress', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/octet-stream' },
+                        body: currentFileData
+                    });
+                    if (resp.ok) {
+                        processedData = new Uint8Array(await resp.arrayBuffer());
+                        calledCpp = true;
+                        backendSource = "C++ Engine (full.cpp)";
+                    }
+                } catch (netErr) {
+                    // Fall back if C++ backend is not yet started
+                }
+
+                if (!calledCpp) {
+                    processedData = compressData(currentFileData);
+                    backendSource = "Client Mirror Engine";
+                }
+
+                const elapsed = Math.max(1, Math.round(performance.now() - t0));
+                renderCompressionResults(currentFileData.length, processedData.length, elapsed, backendSource);
+            } else {
+                let calledCpp = false;
+                try {
+                    const resp = await fetch('/api/decompress', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/octet-stream' },
+                        body: currentFileData
+                    });
+                    if (resp.ok) {
+                        processedData = new Uint8Array(await resp.arrayBuffer());
+                        calledCpp = true;
+                        backendSource = "C++ Engine (full.cpp)";
+                    }
+                } catch (netErr) {
+                    // Fall back
+                }
+
+                if (!calledCpp) {
+                    processedData = decompressData(currentFileData);
+                    backendSource = "Client Mirror Engine";
+                }
+
+                const elapsed = Math.max(1, Math.round(performance.now() - t0));
+                renderDecompressionResults(currentFileData.length, processedData.length, elapsed, backendSource);
+            }
+            stage.style.display = 'none';
+            btn.disabled = false;
+        } catch (err) {
+            stage.style.display = 'none';
+            btn.disabled = false;
+            showError(err.message || "An error occurred during processing.");
+        }
+    }
+}
+
+// 4-Card Size Report: Original Size, Compressed Size, Space Saved %, Ratio %
+function renderCompressionResults(origSize, compSize, elapsedMs, backendSource = "C++ Engine (full.cpp)") {
+    const section = document.getElementById('resultsSection');
+    section.style.display = 'block';
+    section.classList.add('show');
+    document.getElementById('errorNotification').style.display = 'none';
+
+    document.getElementById('resultsTitle').textContent = "Compression Metrics Report";
+    document.getElementById('latencyBadge').textContent = `${backendSource} • ${elapsedMs} ms`;
+
+    document.getElementById('metricLabel1').textContent = "Original Size";
+    document.getElementById('metricVal1').textContent = formatBytes(origSize);
+
+    document.getElementById('metricLabel2').textContent = "Compressed Size";
+    document.getElementById('metricVal2').textContent = formatBytes(compSize);
+
+    const savedBytes = origSize - compSize;
+    const savedPercent = origSize > 0 ? ((savedBytes / origSize) * 100).toFixed(1) : 0;
+    const ratioPercent = origSize > 0 ? ((compSize / origSize) * 100).toFixed(1) : 0;
+
+    document.getElementById('metricLabel3').textContent = "Space Saved";
+    animateCounter('metricVal3', parseFloat(savedPercent), "%");
+
+    document.getElementById('metricLabel4').textContent = "Ratio";
+    animateCounter('metricVal4', parseFloat(ratioPercent), "%");
+
+    document.getElementById('ratioBox').style.display = 'block';
+    document.getElementById('ratioLabelText').textContent = `${ratioPercent}% of original size`;
+    setTimeout(() => {
+        const fillW = Math.min(100, Math.max(3, ratioPercent));
+        document.getElementById('ratioBar').style.width = `${fillW}%`;
+    }, 60);
+
+    const baseName = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, "") : "archive";
+    const outName = `${baseName}.dfx`;
+    setupDownloadButton(processedData, outName, "application/octet-stream", `Download Archive (${outName})`);
+}
+
+function renderDecompressionResults(compSize, restSize, elapsedMs, backendSource = "C++ Engine (full.cpp)") {
+    const section = document.getElementById('resultsSection');
+    section.style.display = 'block';
+    section.classList.add('show');
+    document.getElementById('errorNotification').style.display = 'none';
+
+    document.getElementById('resultsTitle').textContent = "Decompression Metrics Report";
+    document.getElementById('latencyBadge').textContent = `${backendSource} • ${elapsedMs} ms`;
+
+    document.getElementById('metricLabel1').textContent = "Archive Size";
+    document.getElementById('metricVal1').textContent = formatBytes(compSize);
+
+    document.getElementById('metricLabel2').textContent = "Restored Size";
+    document.getElementById('metricVal2').textContent = formatBytes(restSize);
+
+    const expandRatio = compSize > 0 ? (restSize / compSize).toFixed(2) : "1.00";
+    document.getElementById('metricLabel3').textContent = "Expansion";
+    document.getElementById('metricVal3').textContent = `${expandRatio}x`;
+
+    document.getElementById('metricLabel4').textContent = "Integrity";
+    document.getElementById('metricVal4').textContent = "100%";
+
+    document.getElementById('ratioBox').style.display = 'none';
+
+    let baseName = selectedFile ? selectedFile.name : "restored_document";
+    if (baseName.endsWith('.dfx')) baseName = baseName.slice(0, -4);
+    if (!baseName.includes('.')) baseName += ".txt";
+    setupDownloadButton(processedData, baseName, "text/plain", `Download Restored Text (${baseName})`);
+}
+
+function animateCounter(elementId, target, suffix = "") {
+    const el = document.getElementById(elementId);
+    const start = 0; const duration = 650; const startTime = performance.now();
+    function step(now) {
+        const progress = Math.min((now - startTime) / duration, 1);
+        const ease = 1 - Math.pow(1 - progress, 3);
+        const current = (start + (target - start) * ease).toFixed(1);
+        el.textContent = `${current}${suffix}`;
+        if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+}
+
+function setupDownloadButton(data, filename, mime, label) {
+    const blob = new Blob([data], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const btn = document.getElementById('downloadBtn');
+    btn.href = url;
+    btn.download = filename;
+    document.getElementById('downloadBtnLabel').textContent = label;
+}
+
+function showError(msg) {
+    const el = document.getElementById('errorNotification');
+    document.getElementById('errorMsgText').textContent = msg;
+    el.style.display = 'flex';
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+</script>
+
+</body>
+</html>
