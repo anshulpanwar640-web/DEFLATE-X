@@ -5,7 +5,7 @@
 #include <string>
 using namespace std;
 
-// ---------- Member 1: BitWriter and BitReader ----------
+
 
 class BitWriter {
 private:
@@ -97,9 +97,7 @@ public:
     }
 };
 
-// ---------- Member 2 and 3: Min-Heap and Huffman Tree ----------
 
-// one slot for every possible character (0 to 255)
 const int TOTAL = 256;
 
 struct Node {
@@ -118,7 +116,7 @@ Node* makeNode(int symbol, int freq, Node* left, Node* right) {
     return n;
 }
 
-// smallest freq should come out first (min heap)
+
 struct Compare {
     bool operator()(Node* a, Node* b) {
         return a->freq > b->freq;
@@ -149,7 +147,7 @@ Node* buildTree(int freq[]) {
     return heap.top();
 }
 
-// left = 0, right = 1
+
 void makeCodes(Node* root, string code, string codes[]) {
     if (root == NULL) {
         return;
@@ -194,7 +192,7 @@ int readSymbol(BitReader* reader, Node* root) {
     return cur->symbol;
 }
 
-// ---------- compress and decompress ----------
+
 
 int getSize(const char* name) {
     ifstream in(name, ios::binary);
@@ -218,7 +216,7 @@ void compress(const char* inName, const char* outName) {
     in.read((char*)data, size);
     in.close();
 
-    // step 1: count frequency
+    
     int freq[TOTAL];
     for (int i = 0; i < TOTAL; i++) {
         freq[i] = 0;
@@ -227,7 +225,7 @@ void compress(const char* inName, const char* outName) {
         freq[data[i]]++;
     }
 
-    // step 2: Huffman tree and codes
+    
     Node* root = buildTree(freq);
     string codes[TOTAL];
     makeCodes(root, "", codes);
@@ -239,7 +237,7 @@ void compress(const char* inName, const char* outName) {
         }
     }
 
-    // step 3: write bits
+    
     BitWriter writer(outName);
     writer.writeBits(size, 32);
     writer.writeBits(distinct, 9);
